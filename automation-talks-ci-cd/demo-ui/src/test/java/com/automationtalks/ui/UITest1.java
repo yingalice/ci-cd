@@ -29,7 +29,7 @@ public class UITest1 {
   @Test
   public void Test2() {
     driver.get("https://automationtalks.com/");
-    Assert.assertTrue(driver.getTitle().matches("^AutomationTalks - Learn Automation Testing$"));
+    Assert.assertTrue(driver.getTitle().matches("^AutomationTalks - Learn Automation Testing5$"));
     System.out.println("Test 2 title is: " + driver.getTitle());
   }
 
