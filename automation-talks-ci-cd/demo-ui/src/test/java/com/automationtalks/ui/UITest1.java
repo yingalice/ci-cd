@@ -22,22 +22,22 @@ public class UITest1 {
   @Test
   public void Test1() {
     driver.get("https://automationtalks.com/");
-    Assert.assertEquals(driver.getTitle(), "AutomationTalks - Learn Automation Testing");
     System.out.println("Test 1 title is: " + driver.getTitle());
+    Assert.assertEquals(driver.getTitle(), "AutomationTalks - Learn Automation Testing");
   }
 
   @Test
   public void Test2() {
     driver.get("https://automationtalks.com/");
-    Assert.assertTrue(driver.getTitle().matches("^AutomationTalks - Learn Automation Testing5$"));
     System.out.println("Test 2 title is: " + driver.getTitle());
+    Assert.assertTrue(driver.getTitle().matches("^AutomationTalks - Learn Automation Testing$"));
   }
 
   @Test
   public void Test3() {
     driver.get("https://automationtalks.com/");
-    Assert.assertTrue(driver.getTitle().matches("^AutomationTalks - .*"));
     System.out.println("Test 3 title is: " + driver.getTitle());
+    Assert.assertTrue(driver.getTitle().matches("^AutomationTalks - .*"));
   }
 
   @AfterMethod
