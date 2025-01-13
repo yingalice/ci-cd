@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="TestNGTest-a742a254-ee24-4579-896f-7a46d458402d"
+           tests="3"
+           failures="0"
+           errors="0"
+           skipped="0"
+           time="4.425">
+    <properties></properties>
+
+
+
+            <testcase
+                name="test1"
+                time="1.377"
+                classname="com.automationtalks.ui.UITest1">
+            </testcase>
+            <testcase
+                name="test2"
+                time="1.529"
+                classname="com.automationtalks.ui.UITest1">
+            </testcase>
+            <testcase
+                name="test3"
+                time="1.519"
+                classname="com.automationtalks.ui.UITest1">
+            </testcase>
+</testsuite>

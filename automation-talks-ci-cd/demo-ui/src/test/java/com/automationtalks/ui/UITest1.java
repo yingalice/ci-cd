@@ -1,6 +1,7 @@
 package com.automationtalks.ui;
 
 import java.time.Duration;
+import java.util.logging.Logger;
 
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
@@ -10,33 +11,35 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 public class UITest1 {
-  public static WebDriver driver;
-
+  private static WebDriver driver;
+  private static String url = "https://automationtalks.com/";
+  Logger logger = Logger.getLogger(getClass().getName());
+  
   @BeforeMethod
-  public void launchDriver() {
+  public static void launchDriver() {
     driver = new ChromeDriver();
     driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
     driver.manage().window().fullscreen();
   }
 
   @Test
-  public void Test1() {
-    driver.get("https://automationtalks.com/");
-    System.out.println("Test 1 title is: " + driver.getTitle());
+  public void test1() {
+    driver.get(url);
+    logger.info("Test 1 title is: " + driver.getTitle());
     Assert.assertEquals(driver.getTitle(), "AutomationTalks - Learn Automation Testing");
   }
 
   @Test
-  public void Test2() {
-    driver.get("https://automationtalks.com/");
-    System.out.println("Test 2 title is: " + driver.getTitle());
+  public void test2() {
+    driver.get(url);
+    logger.info("Test 2 title is: " + driver.getTitle());
     Assert.assertTrue(driver.getTitle().matches("^AutomationTalks - Learn Automation Testing$"));
   }
 
   @Test
-  public void Test3() {
-    driver.get("https://automationtalks.com/");
-    System.out.println("Test 3 title is: " + driver.getTitle());
+  public void test3() {
+    driver.get(url);
+    logger.info("Test 3 title is: " + driver.getTitle());
     Assert.assertTrue(driver.getTitle().matches("^AutomationTalks - .*"));
   }
 
