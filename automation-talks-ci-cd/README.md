@@ -110,7 +110,9 @@
 - Setup:
   - Download: https://www.jenkins.io/download/ (Windows)
   - Install plugins: 
-    - Manage Jenkins > Plugins (look under Available plugins or Installed plugins on left) > Install Maven Integration Plugin
+    - Manage Jenkins > Plugins (look under Available plugins or Installed plugins on left)
+      - Install Maven Integration Plugin
+      - Install SonarQube Scanner for Jenkins
   - Configure Tools:
     - Manage Jenkins > Tools > 
       - JDK installations
@@ -118,7 +120,7 @@
         - MAVEN_HOME: C:\Program Files\apache-maven-3.9.6
   - Configure Email:
     - Manage Jenkins > System
-      - Email Notification:
+      - Email Notification AND Extended E-mail Notification (both):
         - SMTP server: smtp.gmail.com
         - Advanced
           - Username: abc@gmail.com
@@ -152,9 +154,56 @@
       - Editable Email Notification
         - Project Recipient List: abc@gmail.com
         - Default Subject: [$BUILD_STATUS] - $PROJECT_NAME - Build# $BUILD_NUMBER
-        - Default Content: Email body
-        - Attachments: automation-talks-ci-cd/demo-ui/surefire-reports/index.html, automation-talks-ci-cd/demo-ui/surefire-reports/*.jpg
+        - Default Content: $DEFAULT_CONTENT (defaults set in Manage Jenkins > System > Default Content)
+        - Attachments: automation-talks-ci-cd/demo-ui/target/surefire-reports/emailable-report.html
+        - Attach Build Log
+        - Advanced Settings > Triggers > Always (to generate an email regardless of status)
         - Tip: Click (?) next to Content Token Reference, to see the list of $TOKENS
 - Run Jenkins Job:
   - Start: Build Now
   - View: Click on Build #<n> > Console Output 
+- SonarQube Cloud:
+  - Static code analysis
+  - Setup:
+    - SonarQube Cloud: http://sonarcloud.io
+      - Login with GitHub > My Projects > + Analyze New Project (add your repo)
+      - \<Project\> > Administration > Analysis Method
+        - Turn off Automatic Analysis
+        - With Other CI Tools > Maven > Save the SONAR_TOKEN value
+    - Jenins:
+      - Manage Jenkins > System > SonarQube servers:
+        - Name: SonarQube Cloud Jenkins
+        - Server URL: https://sonarcloud.io
+        - Server authentication token: Copy token created in https://sonarcloud.io/account/security
+      - Manage Jenkins > Tools > SonarQube Scanner installations:
+        - Name: sonarqube-scanner
+        - Install automatically
+      - Dashboard > \<Project\> > Configuration > Pre-Steps:
+        - Execute SonarQube Scanner
+          - Analysis properties (get from SonarQube.io > \<Project\> > Information):
+            sonar.projectKey=yingalice_ci-cd
+            sonar.organization=yingalice
+            sonar.sources=automation-talks-ci-cd/demo-ui/src
+## Selenium Grid
+  - Distributed test execution - Run in different machines, browsers, OS at the same time
+  - Download Selenium Server (Grid), .jar file: https://www.selenium.dev/downloads/
+  - Components
+    - Hub (1)
+      - Server for nodes, centralized point where nodes are connected
+      - Distributes cases based on desired capability
+      - Start in command prompt: `java -jar selenium-server-4.27.0.jar hub`.  Note the hub-ip.
+    - Node (many)
+      - Machine you want to run your cases on
+      - Selenium instances, loaded from Hub
+      - Start in command prompt: `java -jar selenium-server-4.27.0.jar node --selenium-manager true --hub http://<hub-ip>:4444 -port <nnnn>` (pick different port for each node)
+      - If running in VirtualBox: Machine > Settings > Network > Bridged Adapter (not NAT)
+        - VM gets its own IP on the network (192...), and not on the LAN of the host (10...)
+    - Selenium code:
+      - Set desired capabilities and use the RemoteWebDriver
+       ```
+        ChromeOptions chromeOptions = new ChromeOptions();
+        // options.setBinary("/snap/firefox/current/usr/lib/firefox/firefox");  // Xubuntu Firefox (snap)
+        chromeOptions.setCapability("platformName", Platform.LINUX);
+        driver = new RemoteWebDriver(new URI("http://<hub-ip>:4444").toURL(), chromeOptions);
+        // throws MalformedURLException, URISyntaxException
+      ```
