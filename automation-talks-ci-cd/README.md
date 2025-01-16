@@ -113,6 +113,7 @@
     - Manage Jenkins > Plugins (look under Available plugins or Installed plugins on left)
       - Install Maven Integration Plugin
       - Install SonarQube Scanner for Jenkins
+      - Install BrowserStack
   - Configure Tools:
     - Manage Jenkins > Tools > 
       - JDK installations
@@ -130,6 +131,8 @@
           - SMTP port: 465
       - Jenkins Location:
         - System Admin e-mail address (set a from: email name): Jenkins Admin <abc@gmail.com>
+  - Add environment variables:
+    - Manage Jenkins > System > Global properties > Environment variables (such as SELENIUM_HUB_IP)
   - Set credentials, secrets, etc:
     - Manage Jenkins > Credentials > (global) > +Add Credentials (Add GitHub login)
 - Create Jenkins Job:
@@ -179,11 +182,15 @@
         - Name: sonarqube-scanner
         - Install automatically
       - Dashboard > \<Project\> > Configuration > Pre-Steps:
+        - Invoke top-level Maven targets:
+          - Goals: test-compile (to create binaries needed in next step)
+          - Advanced > POM: automation-talks-ci-cd/demo-ui/pom.xml
         - Execute SonarQube Scanner
           - Analysis properties (get from SonarQube.io > \<Project\> > Information):
             sonar.projectKey=yingalice_ci-cd
             sonar.organization=yingalice
-            sonar.sources=automation-talks-ci-cd/demo-ui/src
+            sonar.sources=automation-talks-ci-cd/demo-ui/src  (folder with code to scan)
+            sonar.java.binaries=automation-talks-ci-cd/demo-ui/target/test-classes  (folder with .class files)
 ## Selenium Grid
   - Distributed test execution - Run in different machines, browsers, OS at the same time
   - Download Selenium Server (Grid): https://www.selenium.dev/downloads/ (.jar file)
@@ -207,5 +214,114 @@
         driver = new RemoteWebDriver(new URI("http://<hub-ip>:4444").toURL(), chromeOptions);
         // throws MalformedURLException, URISyntaxException
       ```
+    - View Hub Dashboard: http://localhost:4444/
 ## Browserstack
   - Cloud platform to execute cases on real devices (test on many OS/browsers)
+  - Get username and access key: https://automate.browserstack.com/dashboard/
+    - Jenkins:
+      - Manage Jenkins > System > BrowserStack > Add BrowserStack Credentials
+    - Add Windows environment variables:
+        - BROWSERSTACK_USERNAME
+        - BROWSERSTACK_ACCESS_KEY
+  - Integration (https://github.com/browserstack/testng-browserstack):
+    - Use BrowserStack SDK:
+      - `pom.xml`:
+        ```
+        <properties>
+          <browserstack.version>1.29.3</browserstack.version>
+        </properties>
+
+        <dependency>
+          <groupId>com.browserstack</groupId>
+          <artifactId>browserstack-java-sdk</artifactId>
+          <version>${browserstack.version}</version>
+          <scope>compile</scope>
+        </dependency>
+
+        <plugin>
+          <artifactId>maven-dependency-plugin</artifactId>
+          <executions>
+            <execution>
+              <id>getClasspathFilenames</id>
+              <goals>
+                <goal>properties</goal>
+              </goals>
+            </execution>
+          </executions>
+        </plugin>
+
+        <profiles>
+          <profile>
+            <id>browserstack</id>
+            <build>
+              <plugins>
+                <plugin>
+                  <groupId>org.apache.maven.plugins</groupId>
+                  <artifactId>maven-surefire-plugin</artifactId>
+                  <version>${surefire.version}</version>
+                  <configuration>
+                    <suiteXmlFiles>
+                      <suiteXmlFile>${config.file}</suiteXmlFile>
+                    </suiteXmlFiles>
+                    <argLine>
+                      -javaagent:${com.browserstack:browserstack-java-sdk:jar}
+                    </argLine>
+                  </configuration>
+                </plugin>
+              </plugins>
+            </build>
+          </profile>
+        </profiles>
+        ```
+    - `browserstack.yml`:
+      - userName: ${BROWSERSTACK_USERNAME}
+      - accessKey: ${BROWSERSTACK_ACCESS_KEY}
+      - platforms:
+        - Use capabilities generator to specify devices: https://www.browserstack.com/docs/automate/capabilities
+  - Run:
+    - Option 1: On BrowserStack: `mvn test -P browserstack`
+    - Option 2: On BrowserStack via Jenkins: \<Project\> > Configure > Build > Goals and options: `test -P browserstack`
+    - Option 3: On my computer: `mvn test` (In pom.xml, have another surefire section without javaagent, outside of a profile)
+## Docker
+  - Open platform to build, ship, and run distributed apps as portable, isolated processes on any infrastructure
+  - Has extensive library of prebuilt containers on Docker Hub
+  - Containers includes application, dependencies, OS, environment settings
+  - DockerFile (text instructions) --> Docker Image (packaged product) --> Docker Hub (centralized location for images)
+  - Solves issue of:
+    - Works on my machine, but not yours
+      - Solution: Keeps consistent computing environment (settings, database, properties, etc)
+    - Running virtual machines takes too much memory (set, dedicated memory)
+      - Solution: Only takes memory as necessary, shares kernel with other containers
+  - Setup Grid: `https://github.com/SeleniumHQ/docker-selenium/tree/trunk?tab=readme-ov-file#hub-and-nodes`
+    - Create network: `docker network create grid`
+    - Create Hub: `docker run -d -p 4442-4444:4442-4444 --net grid --name selenium-hub selenium/hub:4.28.0-20250120`
+    - Create Nodes:
+      - Chrome: `docker run -d -p 7900:7900 --net grid -e SE_EVENT_BUS_HOST=selenium-hub --shm-size="2g" -e SE_EVENT_BUS_PUBLISH_PORT=4442 -e SE_EVENT_BUS_SUBSCRIBE_PORT=4443 --name selenium-node-chrome selenium/node-chrome:4.28.0-20250120`
+      - Edge: `docker run -d -p 7901:7900 --net grid -e SE_EVENT_BUS_HOST=selenium-hub --shm-size="2g" -e SE_EVENT_BUS_PUBLISH_PORT=4442 -e SE_EVENT_BUS_SUBSCRIBE_PORT=4443 --name selenium-node-edge selenium/node-edge:4.28.0-20250120`
+      - Firefox: `docker run -d -p 7902:7900 --net grid -e SE_EVENT_BUS_HOST=selenium-hub --shm-size="2g" -e SE_EVENT_BUS_PUBLISH_PORT=4442 -e SE_EVENT_BUS_SUBSCRIBE_PORT=4443 --name selenium-node-firefox selenium/node-firefox:4.28.0-20250120`
+      - Notes:
+        - `-e SE_EVENT_BUS_HOST=<ip-from-hub-machine>`
+        - `-e SE_NODE_HOST=<ip-from-this-nodes-machine>`
+    - View container in browser (password is secret):
+      - Chrome: http://localhost:7900/
+      - Edge: http://localhost:7901/
+      - Firefox: http://localhost:7902/
+    - Run as usual using `mvn test` on your grid/RemoteWebDriver setup
+    - Cleanup:
+      - When done, and containers have been removed, then remove the grid network: `docker network rm grid`
+  - Commands
+    - `docker login` - Authenticate to Docker Hub (or other registry)
+    - `docker pull <user>/<image>` - Downloads image from Docker Hub
+    - `docker push <user>/<image>` - Uploads image to Docker Hub
+    - `docker ps` - List running containers.  Add `-a` to get all containers.
+    - `docker images` - Lists all images on local machine
+    - `docker history <user>/<image>` - Lists history of an image
+    - `docker rmi <img-id>` - Delete image
+    - `doker run -it <user/image>` - Run image, create container, change to terminal inside container
+    - `docker start <container-id>` - Start a container
+    - `docker stop <container-id>` - Stop a container
+    - `docker rm -f <container-id>` - Delete container
+    - `docker exec <container-id> <shell cmd>` - Execute command within running container
+    - `docker logs <container-id>` - Displays logs from a running container
+    - `docker diff <container-id>` - Lists changes made to container
+    - `docker port <container-id>` - Displays exposed port of running container

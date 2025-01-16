@@ -30,16 +30,8 @@ framework: testng
 # Platforms object contains all the browser / device combinations you want to test on.
 # Entire list available here -> (https://www.browserstack.com/list-of-browsers-and-platforms/automate)
 platforms:
-  # - os: Windows
-  #   osVersion: 11
-  #   browserName: Edge
-  #   browserVersion: 130.0
-  # - os: OS X
-  #   osVersion: Sequoia
-  #   browserName: Chrome
-  #   browserVersion: latest
-  - deviceName: Samsung Galaxy S23 Ultra
-    osVersion: 13.0
+  - deviceName: Google Pixel 9 Pro XL
+    osVersion: 15.0
     browserName: chrome
     deviceOrientation: portrait
 
@@ -54,15 +46,13 @@ platforms:
 # Example 2 - If you have configured 1 platform and set `parallelsPerPlatform` as 5, a total of 5 (1 * 5) parallel threads will be used on BrowserStack
 parallelsPerPlatform: 1
 
-source: testng:sample-master:v1.1
-
 # ==========================================
 # BrowserStack Local
 # (For localhost, staging/private websites)
 # ==========================================
 # Set browserStackLocal to true if your website under test is not accessible publicly over the internet
 # Learn more about how BrowserStack Local works here -> https://www.browserstack.com/docs/automate/selenium/local-testing-introduction
-browserstackLocal: true # <boolean> (Default false)
+browserstackLocal: false # <boolean> (Default false)
 
 # Options to be passed to BrowserStack local in-case of advanced configurations
 # browserStackLocalOptions:
