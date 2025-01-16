@@ -4,9 +4,13 @@
   <listeners>
     <listener class-name="org.uncommons.reportng.HTMLReporter" />
   </listeners>
-  <test name="Test">
+  <test name="Test" parallel="classes">
     <classes>
-      <class name="com.automationtalks.ui.UITest1"/>
+      <class name="com.automationtalks.ui.UITestGrid">
+        <methods>
+          <include name="test2" />
+        </methods>
+      </class>
     </classes>
   </test>
 </suite> 

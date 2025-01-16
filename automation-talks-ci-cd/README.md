@@ -186,20 +186,20 @@
             sonar.sources=automation-talks-ci-cd/demo-ui/src
 ## Selenium Grid
   - Distributed test execution - Run in different machines, browsers, OS at the same time
-  - Download Selenium Server (Grid), .jar file: https://www.selenium.dev/downloads/
+  - Download Selenium Server (Grid): https://www.selenium.dev/downloads/ (.jar file)
   - Components
     - Hub (1)
       - Server for nodes, centralized point where nodes are connected
-      - Distributes cases based on desired capability
-      - Start in command prompt: `java -jar selenium-server-4.27.0.jar hub`.  Note the hub-ip.
+      - Distributes cases to nodes based on desired capability
+      - Start in command prompt: `java -jar selenium-server-4.27.0.jar hub`
+        - Note the hub-ip.
     - Node (many)
       - Machine you want to run your cases on
-      - Selenium instances, loaded from Hub
-      - Start in command prompt: `java -jar selenium-server-4.27.0.jar node --selenium-manager true --hub http://<hub-ip>:4444 -port <nnnn>` (pick different port for each node)
+      - Start in command prompt: `java -jar selenium-server-4.27.0.jar node --selenium-manager true --hub http://<hub-ip>:4444 -port <nnnn>` (port required if running multiple nodes on 1 machine)
       - If running in VirtualBox: Machine > Settings > Network > Bridged Adapter (not NAT)
         - VM gets its own IP on the network (192...), and not on the LAN of the host (10...)
     - Selenium code:
-      - Set desired capabilities and use the RemoteWebDriver
+      - Set desired capabilities and launch RemoteWebDriver:
        ```
         ChromeOptions chromeOptions = new ChromeOptions();
         // options.setBinary("/snap/firefox/current/usr/lib/firefox/firefox");  // Xubuntu Firefox (snap)
@@ -207,3 +207,5 @@
         driver = new RemoteWebDriver(new URI("http://<hub-ip>:4444").toURL(), chromeOptions);
         // throws MalformedURLException, URISyntaxException
       ```
+## Browserstack
+  - Cloud platform to execute cases on real devices (test on many OS/browsers)
