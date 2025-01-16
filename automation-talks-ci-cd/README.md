@@ -113,6 +113,7 @@
     - Manage Jenkins > Plugins (look under Available plugins or Installed plugins on left)
       - Install Maven Integration Plugin
       - Install SonarQube Scanner for Jenkins
+      - Install BrowserStack
   - Configure Tools:
     - Manage Jenkins > Tools > 
       - JDK installations
@@ -130,6 +131,8 @@
           - SMTP port: 465
       - Jenkins Location:
         - System Admin e-mail address (set a from: email name): Jenkins Admin <abc@gmail.com>
+  - Add environment variables:
+    - Manage Jenkins > System > Global properties > Environment variables (such as SELENIUM_HUB_IP)
   - Set credentials, secrets, etc:
     - Manage Jenkins > Credentials > (global) > +Add Credentials (Add GitHub login)
 - Create Jenkins Job:
@@ -179,11 +182,15 @@
         - Name: sonarqube-scanner
         - Install automatically
       - Dashboard > \<Project\> > Configuration > Pre-Steps:
+        - Invoke top-level Maven targets:
+          - Goals: test-compile (to create binaries needed in next step)
+          - Advanced > POM: automation-talks-ci-cd/demo-ui/pom.xml
         - Execute SonarQube Scanner
           - Analysis properties (get from SonarQube.io > \<Project\> > Information):
             sonar.projectKey=yingalice_ci-cd
             sonar.organization=yingalice
-            sonar.sources=automation-talks-ci-cd/demo-ui/src
+            sonar.sources=automation-talks-ci-cd/demo-ui/src  (folder with code to scan)
+            sonar.java.binaries=automation-talks-ci-cd/demo-ui/target/test-classes  (folder with .class files)
 ## Selenium Grid
   - Distributed test execution - Run in different machines, browsers, OS at the same time
   - Download Selenium Server (Grid): https://www.selenium.dev/downloads/ (.jar file)
@@ -209,3 +216,68 @@
       ```
 ## Browserstack
   - Cloud platform to execute cases on real devices (test on many OS/browsers)
+  - Get username and access key: https://automate.browserstack.com/dashboard/
+    - Jenkins:
+      - Manage Jenkins > System > BrowserStack > Add BrowserStack Credentials
+    - Add Windows environment variables:
+        - BROWSERSTACK_USERNAME
+        - BROWSERSTACK_ACCESS_KEY
+  - Integration (https://github.com/browserstack/testng-browserstack):
+    - Use BrowserStack SDK:
+      - `pom.xml`:
+        ```
+        <properties>
+          <browserstack.version>1.29.3</browserstack.version>
+        </properties>
+
+        <dependency>
+          <groupId>com.browserstack</groupId>
+          <artifactId>browserstack-java-sdk</artifactId>
+          <version>${browserstack.version}</version>
+          <scope>compile</scope>
+        </dependency>
+
+        <plugin>
+          <artifactId>maven-dependency-plugin</artifactId>
+          <executions>
+            <execution>
+              <id>getClasspathFilenames</id>
+              <goals>
+                <goal>properties</goal>
+              </goals>
+            </execution>
+          </executions>
+        </plugin>
+
+        <profiles>
+          <profile>
+            <id>browserstack</id>
+            <build>
+              <plugins>
+                <plugin>
+                  <groupId>org.apache.maven.plugins</groupId>
+                  <artifactId>maven-surefire-plugin</artifactId>
+                  <version>${surefire.version}</version>
+                  <configuration>
+                    <suiteXmlFiles>
+                      <suiteXmlFile>${config.file}</suiteXmlFile>
+                    </suiteXmlFiles>
+                    <argLine>
+                      -javaagent:${com.browserstack:browserstack-java-sdk:jar}
+                    </argLine>
+                  </configuration>
+                </plugin>
+              </plugins>
+            </build>
+          </profile>
+        </profiles>
+        ```
+    - `browserstack.yml`:
+      - userName: ${BROWSERSTACK_USERNAME}
+      - accessKey: ${BROWSERSTACK_ACCESS_KEY}
+      - platforms:
+        - Use capabilities generator to specify devices: https://www.browserstack.com/docs/automate/capabilities
+  - Run:
+    - Option 1: On BrowserStack: `mvn test -P browserstack`
+    - Option 2: On BrowserStack via Jenkins: \<Project\> > Configure > Build > Goals and options: `test -P browserstack`
+    - Option 3: On my computer: `mvn test` (In pom.xml, have another surefire section without javaagent, outside of a profile)

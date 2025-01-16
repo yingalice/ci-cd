@@ -5,10 +5,13 @@
     <listener class-name="org.uncommons.reportng.HTMLReporter" />
   </listeners>
   <test name="Test" parallel="classes">
+    <parameter name="useGrid" value="true" />
+    <parameter name="platformName" value="linux" />
+    <parameter name="browser" value="chrome" />
     <classes>
-      <class name="com.automationtalks.ui.UITestGrid">
+      <class name="com.automationtalks.ui.UITest">
         <methods>
-          <include name="test2" />
+          <include name="test1" />
         </methods>
       </class>
     </classes>
